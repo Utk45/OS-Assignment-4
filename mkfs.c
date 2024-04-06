@@ -16,7 +16,7 @@
 #endif
 
 #define NINODES 200
-#define NSLOTS 128 // Example number of slots
+#define NSLOTS 16 // Example number of slots
 #define SLOT_SIZE 8 // Each slot is 8 blocks
 
 // Disk layout:
@@ -29,11 +29,14 @@ int nmeta;    // Number of meta blocks (boot, sb, nlog, inode, bitmap)
 int nblocks;  // Number of data blocks
 int nswaps = NSLOTS * SLOT_SIZE;
 
+
+
 int fsfd;
 struct superblock sb;
 char zeroes[BSIZE];
 uint freeinode = 1;
 uint freeblock;
+
 
 
 void balloc(int);
@@ -66,6 +69,16 @@ xint(uint x)
   a[3] = x >> 24;
   return y;
 }
+
+struct swap_slot slotsList[NSLOTS];
+void
+initswaplist(){
+  for(int i = 0; i<NSLOTS; i++){
+    slotsList[i].is_free = 1;
+  }
+}
+
+
 
 int
 main(int argc, char *argv[])
@@ -169,7 +182,7 @@ main(int argc, char *argv[])
   winode(rootino, &din);
 
   balloc(freeblock);
-
+  initswaplist();
   exit(0);
 }
 
