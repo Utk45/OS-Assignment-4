@@ -286,6 +286,7 @@ wait(void)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
+        cleanSwap(p->pgdir);
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -422,6 +423,8 @@ forkret(void)
     first = 0;
     iinit(ROOTDEV);
     initlog(ROOTDEV);
+    initswaplist();
+    // init
   }
 
   // Return to "caller", actually trapret (see allocproc).
@@ -547,3 +550,27 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+struct proc *
+findvictimproc(){
+    struct proc *p;
+    //struct cpu *c = mycpu();
+    uint max_rss = 0;
+    int min_pid = 1000000;
+    struct proc *victim_proc;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->rss > max_rss){
+            victim_proc = p;
+            max_rss = p->rss;
+            min_pid = p->pid;
+        }else if(p->rss == max_rss && p->pid < min_pid){
+            victim_proc = p;
+            max_rss = p->rss;
+            min_pid = p->pid;
+        }
+    }
+    release(&ptable.lock);
+    return victim_proc;
+}
+

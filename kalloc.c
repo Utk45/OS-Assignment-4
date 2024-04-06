@@ -97,6 +97,9 @@ kalloc(void)
   {
     kmem.freelist = r->next;
     kmem.num_free_pages-=1;
+  }else{
+    char* freepage = swapout();
+    r = (struct run*)freepage;
   }
     
   if(kmem.use_lock)
